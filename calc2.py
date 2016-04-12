@@ -1,4 +1,4 @@
-INTEGER, PLUS, MINUS, EOF = 'INTEGER', 'PLUS', 'MINUS', 'EOF'
+INTEGER, PLUS, MINUS, MUL, DIV, EOF = 'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', 'EOF'
 
 
 class Token(object):
@@ -13,11 +13,10 @@ class Token(object):
         return self.__str__()
 
 
-class Interpreter(object):
+class Lexer(object):
     def __init__(self, text):
         self.text = text
         self.pos = 0
-        self.current_token = None
         self.current_char = self.text[self.pos]
 
     def error(self):
@@ -35,7 +34,6 @@ class Interpreter(object):
         self.pos += 1
         if self.pos > len(self.text) - 1:
             self.current_char = None
-            self.current_token = Token(EOF, None)
         else:
             self.current_char = self.text[self.pos]
 
@@ -60,39 +58,62 @@ class Interpreter(object):
                 token = Token(MINUS, '-')
                 self.advance()
                 break
+            if self.current_char == '*':
+                token = Token(MUL, '*')
+                self.advance()
+                break
+            if self.current_char == '/':
+                token = Token(DIV, '/')
+                self.advance()
+                break
             self.error()
         return token
 
-    def eat(self, token_type):
-        if token_type == self.current_token.type:
-            self.current_token = self.get_next_token()
+
+class Interpreter(object):
+    def __init__(self, lexer):
+        self.lexer = lexer
+        self.current_token = self.lexer.get_next_token()
+
+    def error(self):
+        raise Exception("Invalid syntax")
+
+    def eat(self, type):
+        if type == self.current_token.type:
+            self.current_token = self.lexer.get_next_token()
         else:
             self.error()
 
-    def expr(self):
-        self.current_token = self.get_next_token()
-        print self.current_token
-        left = self.current_token
+    def factor(self):
+        token = self.current_token
         self.eat(INTEGER)
-        result = left.value
-        while self.current_token.type is not EOF:
-            op = self.current_token
-            if op.type == PLUS:
-                self.eat(PLUS)
-            else:
-                self.eat(MINUS)
-            print op
-            right = self.current_token
-            print self.current_token
-            self.eat(INTEGER)
+        return token.value
 
-            if op.type == PLUS:
-                result += right.value
-            else:
-                result -= right.value
-        print self.current_token
+    def term(self):
+        result = self.factor()
+        while self.current_token.type in (MUL, DIV):
+            if self.current_token.type == MUL:
+                self.eat(MUL)
+                result *= self.factor()
+            elif self.current_token.type == DIV:
+                self.eat(DIV)
+                result /= self.factor()
         return result
 
-interpreter = Interpreter(' 40- 15 +1-13+ 2 ')
+    def expr(self):
+        result = self.term()
+        while self.current_token.type in (PLUS, MINUS):
+            if self.current_token.type == PLUS:
+                self.eat(PLUS)
+                result += self.term()
+            elif self.current_token.type == MINUS:
+                self.eat(MINUS)
+                result -= self.term()
+
+        return result
+
+
+lexer = Lexer('3+1*5*2/2')
+interpreter = Interpreter(lexer)
 result = interpreter.expr()
 print result
