@@ -64,7 +64,24 @@ class Lexer(object):
         self.error()
 
 
-class Interpreter(object):
+class AST(object):
+    pass
+
+
+class BinOp(AST):
+    def __init__(self, left, op, right):
+        self.left = left
+        self.token = self.op = op
+        self.right = right
+
+
+class Num(AST):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
+
+class Parser(object):
     """
     expr: term((PLUS|MINUS)term)*
     term: factor((MUL|DIV)factor)*
@@ -84,44 +101,44 @@ class Interpreter(object):
         else:
             self.error()
 
-    def term(self):
-        result = self.factor()
-        while self.current_token.type in (MUL, DIV):
-            op = self.current_token
-            self.eat(op.type)
-            if op.type == MUL:
-                result *= self.factor()
-            elif op.type == DIV:
-                result /= self.factor()
-            else:
-                self.error()
-        return result
-
     def factor(self):
         token = self.current_token
         if token.type == INTEGER:
             self.eat(INTEGER)
-            return token.value
+            return Num(token)
         elif token.type == LPAREN:
             self.eat(LPAREN)
-            result = self.expr()
+            node = self.expr()
             self.eat(RPAREN)
-            return result
+            return node
+
+    def term(self):
+        node = self.factor()
+        while self.current_token.type in (MUL, DIV):
+            op = self.current_token
+            if op.type == MUL:
+                self.eat(MUL)
+            elif op.type == DIV:
+                self.eat(DIV)
+            node = BinOp(left=node, op=op, right=self.factor())
+        return node
 
     def expr(self):
-        result = self.term()
+        node = self.term()
         while self.current_token.type in (PLUS, MINUS):
             op = self.current_token
-            self.eat(op.type)
             if op.type == PLUS:
-                result += self.term()
+                self.eat(PLUS)
             elif op.type == MINUS:
-                result -= self.term()
-            else:
-                self.error()
+                self.eat(MINUS)
+            node = BinOp(left=node, op=op, right=self.term())
+        return node
 
-        return result
+    def parse(self):
+        return self.expr()
+
 
 if __name__ == "__main__":
-    res = Interpreter(Lexer("2 * (5 * (2 + 4) + 2) - 8/4")).expr()
-    print res
+    lexer = Lexer("2 * 7 + 3")
+    parser = Parser(lexer)
+    print parser.parse()
