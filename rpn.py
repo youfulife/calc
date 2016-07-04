@@ -1,5 +1,15 @@
 import unittest
-from lpi import Lexer, Parser, NodeVisitor
+from lpi import Lexer, Parser
+
+
+class NodeVisitor(object):
+    def visit(self, node):
+        method = 'visit_' + type(node).__name__
+        visitor = getattr(self, method, self.generic_visit)
+        return visitor(node)
+
+    def generic_visit(self, node):
+        raise Exception("No visit_{} method".format(type(node).__name__))
 
 
 class Infix2PostfixTranslator(NodeVisitor):
@@ -30,6 +40,7 @@ def infix2postfix(s):
     translation = translator.translate()
     return translation
 
+
 class Infix2PostfixTestCase(unittest.TestCase):
 
     def test_1(self):
@@ -39,16 +50,10 @@ class Infix2PostfixTestCase(unittest.TestCase):
         self.assertEqual(infix2postfix('2 + 3 * 5'), '2 3 5 * +')
 
     def test_3(self):
-        self.assertEqual(
-            infix2postfix('5 + ((1 + 2) * 4) - 3'),
-            '5 1 2 + 4 * + 3 -',
-        )
+        self.assertEqual(infix2postfix('5 + ((1 + 2) * 4) - 3'), '5 1 2 + 4 * + 3 -')
 
     def test_4(self):
-        self.assertEqual(
-            infix2postfix('(5 + 3) * 12 / 3'),
-            '5 3 + 12 * 3 /',
-        )
+        self.assertEqual(infix2postfix('(5 + 3) * 12 / 3'), '5 3 + 12 * 3 /')
 
 if __name__ == "__main__":
     unittest.main()
