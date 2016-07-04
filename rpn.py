@@ -1,3 +1,4 @@
+import unittest
 from calc0 import Token, Lexer
 
 INTEGER = "INTEGER"
@@ -76,11 +77,36 @@ def visit(tree):
         visit(tree.right)
     stack.append(tree.token.value)
 
-if __name__ == "__main__":
-    stack = []
-    expression = "(5 + 3) * 12 / 3"
-    lexer = Lexer(expression)
+stack = []
+def infix2postfix(s):
+    global stack
+    lexer = Lexer(s)
     parser = Parser(lexer)
     tree = parser.parse()
     visit(tree)
-    print ' '.join(map(str, stack))
+    rpn = ' '.join(map(str, stack))
+    stack = []
+    return rpn
+
+class Infix2PostfixTestCase(unittest.TestCase):
+
+    def test_1(self):
+        self.assertEqual(infix2postfix('2 + 3'), '2 3 +')
+
+    def test_2(self):
+        self.assertEqual(infix2postfix('2 + 3 * 5'), '2 3 5 * +')
+
+    def test_3(self):
+        self.assertEqual(
+            infix2postfix('5 + ((1 + 2) * 4) - 3'),
+            '5 1 2 + 4 * + 3 -',
+        )
+
+    def test_4(self):
+        self.assertEqual(
+            infix2postfix('(5 + 3) * 12 / 3'),
+            '5 3 + 12 * 3 /',
+        )
+
+if __name__ == "__main__":
+    unittest.main()

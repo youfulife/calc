@@ -1,3 +1,5 @@
+import unittest
+
 INTEGER = "INTEGER"
 PLUS, MINUS, MUL, DIV, EOF = "PLUS", "MINUS", "MUL", "DIV", "EOF"
 LPAREN, RPAREN = "LPAREN", "RPAREN"
