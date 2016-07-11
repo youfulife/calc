@@ -92,7 +92,7 @@ class Parser(object):
     """
     expr: term((PLUS|MINUS)term)*
     term: factor((MUL|DIV)factor)*
-    factor: INTEGER|LP expr RP|(PLUS|MINUS)expr
+    factor: INTEGER|LP expr RP|(PLUS|MINUS)factor
     """
     def __init__(self, lexer):
         self.lexer = lexer
@@ -119,7 +119,7 @@ class Parser(object):
             return node
         elif token.type in (PLUS, MINUS):
             self.eat(token.type)
-            return UnaryOP(token, self.expr())
+            return UnaryOP(token, self.factor())
 
     def term(self):
         node = self.factor()
