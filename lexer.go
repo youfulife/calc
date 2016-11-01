@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-var ebnf = `
-            expr: term((PLUS|MINUS)term)*
-            term: factor((MUL|DIV)factor)*
-            factor: INTEGER|LP expr RP|(PLUS|MINUS)factor
-            `
-
 type item struct {
 	typ itemType // Type, such as itemNumber.
 	val string   // Value, such as "23.2", a string is all we need
@@ -222,7 +216,7 @@ func (l *lexer) nextItem() item {
 	}
 }
 
-func lex(name, input string) (*lexer, chan item) {
+func lex(name, input string) *lexer {
 	l := &lexer{
 		name:  name,
 		input: input,
