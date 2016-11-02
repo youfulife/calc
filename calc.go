@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -185,7 +186,7 @@ func newParser(l *lexer) *parser {
 }
 
 func (p *parser) match(typ itemType) {
-	fmt.Println(p.token)
+	// fmt.Println(p.token)
 	if p.token.typ == typ {
 		p.token = p.l.nextItem()
 	} else {
@@ -193,55 +194,116 @@ func (p *parser) match(typ itemType) {
 	}
 }
 
-func (p *parser) parse() {
-	p.expr()
+func (p *parser) parse() *node {
+	return p.expr()
 }
 
-func (p *parser) expr() {
-	p.term()
+func (p *parser) expr() *node {
+	node := p.term()
 	for p.token.typ == itemPlus || p.token.typ == itemMinus {
+		token := p.token
 		if p.token.typ == itemPlus {
 			p.match(itemPlus)
 		} else if p.token.typ == itemMinus {
 			p.match(itemMinus)
 		}
-		p.term()
+		node = newNode(token, node, p.term())
 	}
+	return node
 }
 
-func (p *parser) term() {
-	p.factor()
+func (p *parser) term() *node {
+	node := p.factor()
 	for p.token.typ == itemMul || p.token.typ == itemDiv {
+		token := p.token
 		if p.token.typ == itemMul {
 			p.match(itemMul)
 		} else if p.token.typ == itemDiv {
 			p.match(itemDiv)
 		}
-		p.factor()
+		node = newNode(token, node, p.factor())
+	}
+	return node
+}
+
+func (p *parser) factor() *node {
+	token := p.token
+	if token.typ == itemNumber {
+		p.match(itemNumber)
+		return newNode(token, nil, nil)
+	} else if token.typ == itemLp {
+		p.match(itemLp)
+		node := p.expr()
+		p.match(itemRp)
+		return node
+	} else if token.typ == itemPlus || token.typ == itemMinus {
+		if token.typ == itemPlus {
+			p.match(itemPlus)
+		} else if token.typ == itemMinus {
+			p.match(itemMinus)
+		}
+		node := p.factor()
+		return newNode(token, newNode(item{itemNumber, "0"}, nil, nil), node)
+	}
+	return nil
+}
+
+type node struct {
+	tok   item
+	left  *node
+	right *node
+}
+
+func newNode(i item, l *node, r *node) *node {
+	return &node{
+		tok:   i,
+		left:  l,
+		right: r,
 	}
 }
 
-func (p *parser) factor() {
-	if p.token.typ == itemNumber {
-		p.match(itemNumber)
-	} else if p.token.typ == itemLp {
-		p.match(itemLp)
-		p.expr()
-		p.match(itemRp)
-	} else if p.token.typ == itemPlus || p.token.typ == itemMinus {
-		if p.token.typ == itemPlus {
-			p.match(itemPlus)
-		} else if p.token.typ == itemMinus {
-			p.match(itemMinus)
-		}
-		p.factor()
+func (n *node) walk() float64 {
+	// fmt.Println(n.tok)
+	switch n.tok.typ {
+	case itemPlus:
+		return n.left.walk() + n.right.walk()
+	case itemMinus:
+		return n.left.walk() - n.right.walk()
+	case itemMul:
+		return n.left.walk() * n.right.walk()
+	case itemDiv:
+		return n.left.walk() / n.right.walk()
+	case itemNumber:
+		f, _ := strconv.ParseFloat(n.tok.val, 64)
+		return f
+	default:
+		fmt.Println("AST error")
 	}
+	return 0
+}
+
+type interpreter struct {
+	p    *parser
+	tree *node
+}
+
+func newInterpreter(p *parser) *interpreter {
+	return &interpreter{
+		p:    p,
+		tree: p.parse(),
+	}
+}
+
+func (i *interpreter) interpret() float64 {
+	return i.tree.walk()
 }
 
 func main() {
-	s := "-+-(--(---7+++1)) + 3 * (10 / (12 / (3 + 1) - 1)) / (2 + 3) - 5 - 3 + (8)"
+	s := "-+-(--(---7+++1)) + 3 * (10 / (12 / (3 + 1) - 1)) / (2 + 3) - 5 - 3 + (8.5)"
 	l := newLexer("test", s)
 	go l.lex()
 	p := newParser(l)
-	p.parse()
+	i := newInterpreter(p)
+	r := i.interpret()
+	fmt.Println(r)
 }
