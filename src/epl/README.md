@@ -5,7 +5,7 @@
 <expression>           ::= <term> { OR <term> }
 <term>                 ::= <factor> { AND <factor> }
 <factor>               ::= <predicate> | '(' <expression> ')'
-<predicate>            ::= <comp_predicate> | <in_predicate> | <match_predicate>
+<predicate>            ::= <comp_predicate> | <in_predicate>
 
 <comp_predicate>       ::= string_lit <comp_op> (num_lit | regex_lit | string_lit)
 <comp_op>              ::= '>' | '<' | '=' | '>=' | '<=' | '!=' | '<>' | '=~' | '!~'
