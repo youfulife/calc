@@ -268,7 +268,6 @@ func (s *Scanner) scanNumber() (tok Token, pos Pos, lit string) {
 
 	// Read as a duration or integer if it doesn't have a fractional part.
 	if !isDecimal {
-		s.r.unread()
 		return INTEGER, pos, buf.String()
 	}
 	return NUMBER, pos, buf.String()

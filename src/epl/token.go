@@ -25,7 +25,6 @@ const (
 	BADESCAPE  // \q
 	TRUE       // true
 	FALSE      // false
-	NIL        // nil
 	REGEX      // Regular expressions
 	BADREGEX   // `.*
 	literalEnd
@@ -78,12 +77,12 @@ var tokens = [...]string{
 
 	IDENT:     "IDENT",
 	NUMBER:    "NUMBER",
+	INTEGER:   "INTEGER",
 	STRING:    "STRING",
 	BADSTRING: "BADSTRING",
 	BADESCAPE: "BADESCAPE",
 	TRUE:      "TRUE",
 	FALSE:     "FALSE",
-	NIL:       "NIL",
 	REGEX:     "REGEX",
 
 	ADD: "+",
