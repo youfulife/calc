@@ -8,6 +8,14 @@ import (
 	"epl"
 )
 
+// errstring converts an error to its string representation.
+func errString(err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
 // Ensure the scanner can scan tokens correctly.
 func TestScanner_Scan(t *testing.T) {
 	var tests = []struct {
@@ -101,17 +109,6 @@ func TestScanner_Scan(t *testing.T) {
 		{s: `+.`, tok: epl.ADD, lit: ``},
 		{s: `10.3s`, tok: epl.NUMBER, lit: `10.3`},
 
-		// Durations
-		{s: `10u`, tok: epl.DURATIONVAL, lit: `10u`},
-		{s: `10µ`, tok: epl.DURATIONVAL, lit: `10µ`},
-		{s: `10ms`, tok: epl.DURATIONVAL, lit: `10ms`},
-		{s: `-1s`, tok: epl.DURATIONVAL, lit: `-1s`},
-		{s: `10m`, tok: epl.DURATIONVAL, lit: `10m`},
-		{s: `10h`, tok: epl.DURATIONVAL, lit: `10h`},
-		{s: `10d`, tok: epl.DURATIONVAL, lit: `10d`},
-		{s: `10w`, tok: epl.DURATIONVAL, lit: `10w`},
-		{s: `10x`, tok: epl.DURATIONVAL, lit: `10x`}, // non-duration unit, but scanned as a duration value
-
 		// Keywords
 		{s: `ALL`, tok: epl.ALL},
 		{s: `FROM`, tok: epl.FROM},
@@ -187,14 +184,6 @@ func TestScanner_Scan_Multi(t *testing.T) {
 	}
 }
 
-// errstring converts an error to its string representation.
-func errstring(err error) string {
-	if err != nil {
-		return err.Error()
-	}
-	return ""
-}
-
 // Ensure the library can correctly scan strings.
 func TestScanString(t *testing.T) {
 	var tests = []struct {
@@ -217,7 +206,7 @@ func TestScanString(t *testing.T) {
 
 	for i, tt := range tests {
 		out, err := epl.ScanString(strings.NewReader(tt.in))
-		if tt.err != errstring(err) {
+		if tt.err != errString(err) {
 			t.Errorf("%d. %s: error: exp=%s, got=%s", i, tt.in, tt.err, err)
 		} else if tt.out != out {
 			t.Errorf("%d. %s: out: exp=%s, got=%s", i, tt.in, tt.out, out)

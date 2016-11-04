@@ -16,19 +16,18 @@ const (
 
 	literalBeg
 	// IDENT and the following are InfluxQL literal tokens.
-	IDENT       // main
-	BOUNDPARAM  // $param
-	NUMBER      // 12345.67
-	INTEGER     // 12345
-	DURATIONVAL // 13h
-	STRING      // "abc"
-	BADSTRING   // "abc
-	BADESCAPE   // \q
-	TRUE        // true
-	FALSE       // false
-	NIL         // nil
-	REGEX       // Regular expressions
-	BADREGEX    // `.*
+	IDENT      // main
+	BOUNDPARAM // $param
+	NUMBER     // 12345.67
+	INTEGER    // 12345
+	STRING     // "abc"
+	BADSTRING  // "abc
+	BADESCAPE  // \q
+	TRUE       // true
+	FALSE      // false
+	NIL        // nil
+	REGEX      // Regular expressions
+	BADREGEX   // `.*
 	literalEnd
 
 	operatorBeg
@@ -63,6 +62,7 @@ const (
 
 	keywordBeg
 	ALL
+	AS
 	FROM
 	NI // not in
 	IN
@@ -76,16 +76,15 @@ var tokens = [...]string{
 	EOF:     "EOF",
 	WS:      "WS",
 
-	IDENT:       "IDENT",
-	NUMBER:      "NUMBER",
-	DURATIONVAL: "DURATIONVAL",
-	STRING:      "STRING",
-	BADSTRING:   "BADSTRING",
-	BADESCAPE:   "BADESCAPE",
-	TRUE:        "TRUE",
-	FALSE:       "FALSE",
-	NIL:         "NIL",
-	REGEX:       "REGEX",
+	IDENT:     "IDENT",
+	NUMBER:    "NUMBER",
+	STRING:    "STRING",
+	BADSTRING: "BADSTRING",
+	BADESCAPE: "BADESCAPE",
+	TRUE:      "TRUE",
+	FALSE:     "FALSE",
+	NIL:       "NIL",
+	REGEX:     "REGEX",
 
 	ADD: "+",
 	SUB: "-",
@@ -115,6 +114,7 @@ var tokens = [...]string{
 	DOT:         ".",
 
 	ALL:    "ALL",
+	AS:     "AS",
 	FROM:   "FROM",
 	NI:     "NI",
 	IN:     "IN",
