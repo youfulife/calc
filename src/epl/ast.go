@@ -398,11 +398,6 @@ func (s *SelectStatement) validate() error {
 }
 
 func (s *SelectStatement) validateFields() error {
-	ns := s.NamesInSelect()
-	if len(ns) == 1 && ns[0] == "time" {
-		return fmt.Errorf("at least 1 non-time field must be queried")
-	}
-
 	for _, f := range s.Fields {
 		switch expr := f.Expr.(type) {
 		case *BinaryExpr:
@@ -465,23 +460,16 @@ func (s *SelectStatement) validateAggregates() error {
 			if err := s.validSelectWithAggregate(); err != nil {
 				return err
 			}
-			if exp, got := 1, len(expr.Args); got != exp {
-				return fmt.Errorf("invalid number of arguments for %s, expected %d, got %d", expr.Name, exp, got)
+			if len(expr.Args) != 1 {
+				return fmt.Errorf("invalid number of arguments for %s, expected 1, got %d", expr.Name, len(expr.Args))
 			}
-			switch fc := expr.Args[0].(type) {
-			case *VarRef, *RegexLiteral:
+			switch expr.Args[0].(type) {
+			case *VarRef:
 				// do nothing
-			case *Call:
-				if fc.Name != "distinct" || expr.Name != "count" {
-					return fmt.Errorf("expected field argument in %s()", expr.Name)
-				} else if exp, got := 1, len(fc.Args); got != exp {
-					return fmt.Errorf("count(distinct <field>) can only have one argument")
-				} else if _, ok := fc.Args[0].(*VarRef); !ok {
-					return fmt.Errorf("expected field argument in distinct()")
-				}
+			case *BinaryExpr:
+				// todo
 			default:
 				return fmt.Errorf("expected field argument in %s()", expr.Name)
-
 			}
 		}
 	}

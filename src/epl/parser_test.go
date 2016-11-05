@@ -11,21 +11,8 @@ import (
 )
 
 // Ensure the parser can parse strings into Statement ASTs.
-func TestParser_Expr0(t *testing.T) {
-	s := "(1 + 2) * 3"
-	p := epl.NewParser(strings.NewReader(s))
-	expr, err := p.ParseExpr()
-	fmt.Println(s)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
-	fmt.Println(expr)
-}
-
-// Ensure the parser can parse strings into Statement ASTs.
 func TestParser_ParseStatement0(t *testing.T) {
-	s := "SELECT count(value * 5 + 3)/10 As xxx   , avg(value) FROM foo"
+	s := "SELECT count(value*2)/10 As xxx   , avg(value) FROM foo"
 	p := epl.NewParser(strings.NewReader(s))
 	stmt, err := p.ParseStatement()
 	fmt.Println(s)
