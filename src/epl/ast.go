@@ -463,11 +463,18 @@ func (s *SelectStatement) validateAggregates() error {
 			if len(expr.Args) != 1 {
 				return fmt.Errorf("invalid number of arguments for %s, expected 1, got %d", expr.Name, len(expr.Args))
 			}
-			switch expr.Args[0].(type) {
+			if expr.Name == "count" {
+				if _, ok := expr.Args[0].(*VarRef); !ok {
+					return fmt.Errorf("expected field argument in count()")
+				}
+			}
+			switch fc := expr.Args[0].(type) {
 			case *VarRef:
 				// do nothing
 			case *BinaryExpr:
-				// todo
+				if err := fc.validateArgs(); err != nil {
+					return err
+				}
 			default:
 				return fmt.Errorf("expected field argument in %s()", expr.Name)
 			}
@@ -950,6 +957,17 @@ func (e *BinaryExpr) validate() error {
 		return v.err
 	} else if v.calls && v.refs {
 		return errors.New("binary expressions cannot mix aggregates and raw fields")
+	}
+	return nil
+}
+
+func (e *BinaryExpr) validateArgs() error {
+	v := binaryExprValidator{}
+	Walk(&v, e)
+	if v.err != nil {
+		return v.err
+	} else if v.calls {
+		return errors.New("argument binary expressions cannot mix aggregates")
 	}
 	return nil
 }

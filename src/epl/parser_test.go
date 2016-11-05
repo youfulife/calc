@@ -10,19 +10,6 @@ import (
 	"testing"
 )
 
-// Ensure the parser can parse strings into Statement ASTs.
-func TestParser_ParseStatement0(t *testing.T) {
-	s := "SELECT count(value*2)/10 As xxx   , avg(value) FROM foo"
-	p := epl.NewParser(strings.NewReader(s))
-	stmt, err := p.ParseStatement()
-	fmt.Println(s)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
-	fmt.Println(stmt)
-}
-
 // Ensure the parser can parse an empty query.
 func TestParser_ParseQuery_Empty(t *testing.T) {
 	q, err := epl.NewParser(strings.NewReader(``)).ParseQuery()
@@ -55,13 +42,12 @@ func TestParser_ParseStatement(t *testing.T) {
 		{s: ``, err: `found EOF, expected SELECT at line 1, char 1`},
 		{s: `SELECT`, err: `found EOF, expected identifier, string, number, bool at line 1, char 8`},
 		{s: `SELECT count(max(value)) FROM myseries`, err: `expected field argument in count()`},
-		{s: `SELECT count(distinct('value')) FROM myseries`, err: `expected field argument in distinct()`},
+		{s: `SELECT count(distinct('value')) FROM myseries`, err: `expected field argument in count()`},
 		{s: `SELECT min(max(value)) FROM myseries`, err: `expected field argument in min()`},
 		{s: `SELECT min(distinct(value)) FROM myseries`, err: `expected field argument in min()`},
 		{s: `SELECT max(max(value)) FROM myseries`, err: `expected field argument in max()`},
 		{s: `SELECT sum(max(value)) FROM myseries`, err: `expected field argument in sum()`},
 		{s: `SELECT count(value), value FROM foo`, err: `mixing aggregate and non-aggregate queries is not supported`},
-		{s: `SELECT count(value)/10, avg(value) FROM foo`, err: `mixing aggregate and non-aggregate queries is not supported`},
 		{s: `select count() from myseries`, err: `invalid number of arguments for count, expected 1, got 0`},
 
 		{s: `SELECT value = 2 FROM cpu`, err: `invalid operator = in SELECT clause at line 1, char 8; operator is intended for WHERE clause`},
@@ -70,7 +56,6 @@ func TestParser_ParseStatement(t *testing.T) {
 		{s: `SELECT (count(foo + sum(bar))) FROM cpu`, err: `expected field argument in count()`},
 		{s: `SELECT sum(value) + count(foo + sum(bar)) FROM cpu`, err: `binary expressions cannot mix aggregates and raw fields`},
 	}
-
 	for i, tt := range tests {
 		if tt.skip {
 			continue
