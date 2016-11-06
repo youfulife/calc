@@ -2,11 +2,9 @@ package epl_test
 
 import (
 	"epl"
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
 
 func BenchmarkQuery_String(b *testing.B) {
@@ -29,8 +27,6 @@ func TestInspectDataType(t *testing.T) {
 		{100, epl.Integer},
 		{true, epl.Boolean},
 		{"string", epl.String},
-		{time.Now(), epl.Time},
-		{time.Second, epl.Duration},
 		{nil, epl.Unknown},
 	} {
 		if typ := epl.InspectDataType(tt.v); tt.typ != typ {
@@ -49,9 +45,6 @@ func TestDataType_String(t *testing.T) {
 		{epl.Integer, "integer"},
 		{epl.Boolean, "boolean"},
 		{epl.String, "string"},
-		{epl.Time, "time"},
-		{epl.Duration, "duration"},
-		{epl.Tag, "tag"},
 		{epl.Unknown, "unknown"},
 	} {
 		if v := tt.typ.String(); tt.v != v {
@@ -71,7 +64,7 @@ func TestSelect_NamesInSelect(t *testing.T) {
 
 // Ensure the idents from the where clause can come out
 func TestSelect_NamesInWhere(t *testing.T) {
-	s := MustParseSelectStatement("select sum(xxx) from cpu where time > 23s AND (asdf = 'jkl' OR (foo = 'bar' AND baz = 'bar'))")
+	s := MustParseSelectStatement("select sum(xxx) from cpu where time > 23 AND (asdf = 'jkl' OR (foo = 'bar' AND baz = 'bar'))")
 	a := s.NamesInWhere()
 	if !reflect.DeepEqual(a, []string{"time", "asdf", "foo", "baz"}) {
 		t.Fatalf("exp: time,asdf,foo,baz\ngot: %s\n", strings.Join(a, ","))
@@ -319,7 +312,15 @@ func TestSelect_ColumnNames(t *testing.T) {
 					{Expr: &epl.VarRef{Val: "value"}},
 				}),
 			},
-			columns: []string{"time", "value"},
+			columns: []string{"value"},
+		},
+		{
+			stmt: &epl.SelectStatement{
+				Fields: epl.Fields([]*epl.Field{
+					{Expr: &epl.Call{Name: "sum"}},
+				}),
+			},
+			columns: []string{"sum"},
 		},
 		{
 			stmt: &epl.SelectStatement{
@@ -329,7 +330,7 @@ func TestSelect_ColumnNames(t *testing.T) {
 					{Expr: &epl.VarRef{Val: "value_1"}},
 				}),
 			},
-			columns: []string{"time", "value", "value_1", "value_1_1"},
+			columns: []string{"value", "value_1", "value_1_1"},
 		},
 		{
 			stmt: &epl.SelectStatement{
@@ -339,7 +340,7 @@ func TestSelect_ColumnNames(t *testing.T) {
 					{Expr: &epl.VarRef{Val: "value"}},
 				}),
 			},
-			columns: []string{"time", "value", "value_1", "value_2"},
+			columns: []string{"value", "value_1", "value_2"},
 		},
 		{
 			stmt: &epl.SelectStatement{
@@ -349,7 +350,7 @@ func TestSelect_ColumnNames(t *testing.T) {
 					{Expr: &epl.VarRef{Val: "value"}},
 				}),
 			},
-			columns: []string{"time", "value_1", "value", "value_2"},
+			columns: []string{"value_1", "value", "value_2"},
 		},
 	} {
 		columns := tt.stmt.ColumnNames()
@@ -375,29 +376,6 @@ func TestSources_Names(t *testing.T) {
 	}
 	if names[1] != "mem" {
 		t.Errorf("expected mem, got %s", names[1])
-	}
-}
-
-// Parse statements that might appear valid but should return an error.
-// If allowed to execute, at least some of these statements would result in a panic.
-func TestParse_Errors(t *testing.T) {
-	for _, tt := range []struct {
-		tmpl string
-		good string
-		bad  string
-	}{
-		// Second argument to derivative must be duration
-		{tmpl: `SELECT derivative(f, %s) FROM m`, good: "1h", bad: "true"},
-	} {
-		good := fmt.Sprintf(tt.tmpl, tt.good)
-		if _, err := epl.ParseStatement(good); err != nil {
-			t.Fatalf("statement %q should have parsed correctly but returned error: %s", good, err)
-		}
-
-		bad := fmt.Sprintf(tt.tmpl, tt.bad)
-		if _, err := epl.ParseStatement(bad); err == nil {
-			t.Fatalf("statement %q should have resulted in a parse error but did not", bad)
-		}
 	}
 }
 

@@ -26,14 +26,8 @@ const (
 	String = 3
 	// Boolean means the data type is a boolean.
 	Boolean = 4
-	// Time means the data type is a time.
-	Time = 5
-	// Duration means the data type is a duration of time.
-	Duration = 6
-	// Tag means the data type is a tag.
-	Tag = 7
 	// AnyField means the data type is any field.
-	AnyField = 8
+	AnyField = 5
 )
 
 var (
@@ -53,10 +47,6 @@ func InspectDataType(v interface{}) DataType {
 		return String
 	case bool:
 		return Boolean
-	case time.Time:
-		return Time
-	case time.Duration:
-		return Duration
 	default:
 		return Unknown
 	}
@@ -81,12 +71,6 @@ func (d DataType) String() string {
 		return "string"
 	case Boolean:
 		return "boolean"
-	case Time:
-		return "time"
-	case Duration:
-		return "duration"
-	case Tag:
-		return "tag"
 	case AnyField:
 		return "field"
 	}
@@ -313,38 +297,23 @@ func (s *SelectStatement) ColumnNames() []string {
 	columnFields := Fields{}
 	for _, field := range s.Fields {
 		columnFields = append(columnFields, field)
-
-		switch f := field.Expr.(type) {
-		case *Call:
-			if f.Name == "top" || f.Name == "bottom" {
-				for _, arg := range f.Args[1:] {
-					ref, ok := arg.(*VarRef)
-					if ok {
-						columnFields = append(columnFields, &Field{Expr: ref})
-					}
-				}
-			}
-		}
 	}
 
-	// Determine if we should add an extra column for an implicit time.
-	offset := 0
-
-	columnNames := make([]string, len(columnFields)+offset)
+	columnNames := make([]string, len(columnFields))
 	// Keep track of the encountered column names.
 	names := make(map[string]int)
 
 	// Resolve aliases first.
 	for i, col := range columnFields {
 		if col.Alias != "" {
-			columnNames[i+offset] = col.Alias
+			columnNames[i] = col.Alias
 			names[col.Alias] = 1
 		}
 	}
 
 	// Resolve any generated names and resolve conflicts.
 	for i, col := range columnFields {
-		if columnNames[i+offset] != "" {
+		if columnNames[i] != "" {
 			continue
 		}
 
@@ -363,7 +332,7 @@ func (s *SelectStatement) ColumnNames() []string {
 			}
 		}
 		names[name]++
-		columnNames[i+offset] = name
+		columnNames[i] = name
 	}
 	return columnNames
 }
